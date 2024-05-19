@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .day-section {
+            margin-bottom: 20px;
+        }
+        .item {
+            margin-bottom: 10px;
+        }
+        .item label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .item input,
+        .item select,
+        .item button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+        }
+        #total {
+            text-align: right;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopping List</h1>
+    <label for="starting-day">Starting Day:</label>
+    <select id="starting-day" onchange="changeStartingDay()">
+        <option value="Sunday">Sunday</option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+        <option value="Saturday">Saturday</option>
+    </select>
+    <div id="shopping-list-container"></div>
+    <div id="total">
+        <span>Total: ¥<span id="total-price">0</span></span>
+        <button onclick="resetList()">Reset</button>
+    </div>
+
+    <script>
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+        let startingDay = localStorage.getItem('startingDay') || "Sunday";
+
+        function saveList() {
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            localStorage.setItem('startingDay', startingDay);
+        }
+
+        function calculateTotal() {
+            const total = shoppingList.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+            document.getElementById('total-price').innerText = total.toFixed(2);
+        }
+
+        function addItem(day) {
+            shoppingList.push({ name: '', price: 0, day: day, storage: 'Frozen' });
+            renderList();
+        }
+
+        function deleteItem(index) {
+            shoppingList.splice(index, 1);
+            renderList();
+        }
+
+        function updateItem(index, key, value) {
+            shoppingList[index][key] = value;
+            if (key === 'day') {
+                renderList();
+            } else {
+                saveList();
+                calculateTotal();
+            }
+        }
+
+        function changeStartingDay() {
+            startingDay = document.getElementById('starting-day').value;
+            saveList();
+            renderList();
+        }
+
+        function renderList() {
+            const container = document.getElementById('shopping-list-container');
+            container.innerHTML = '';
+
+            let currentIndex = daysOfWeek.indexOf(startingDay);
+            for (let i = 0; i < daysOfWeek.length; i++) {
+                const day = daysOfWeek[currentIndex];
+                const daySection = document.createElement('div');
+                daySection.className = 'day-section';
+                const dayHeader = document.createElement('h2');
+                dayHeader.innerText = day;
+                daySection.appendChild(dayHeader);
+
+                shoppingList.forEach((item, index) => {
+                    if (item.day === day) {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item';
+
+                        const nameLabel = document.createElement('label');
+                        nameLabel.innerText = 'Item Name:';
+                        const nameInput = document.createElement('input');
+                        nameInput.type = 'text';
+                        nameInput.value = item.name;
+                        nameInput.oninput = (e) => updateItem(index, 'name', e.target.value);
+                        itemDiv.appendChild(nameLabel);
+                        itemDiv.appendChild(nameInput);
+
+                        const priceLabel = document.createElement('label');
+                        priceLabel.innerText = 'Price:';
+                        const priceInput = document.createElement('input');
+                        priceInput.type = 'number';
+                        priceInput.step = '0.01';
+                        priceInput.value = item.price;
+                        priceInput.oninput = (e) => updateItem(index, 'price', e.target.value);
+                        itemDiv.appendChild(priceLabel);
+                        itemDiv.appendChild(priceInput);
+
+                        const dayLabel = document.createElement('label');
+                        dayLabel.innerText = 'Day:';
+                        const daySelect = document.createElement('select');
+                        daysOfWeek.forEach(dayOption => {
+                            const option = document.createElement('option');
+                            option.value = dayOption;
+                            option.innerText = dayOption;
+                            if (dayOption === item.day) {
+                                option.selected = true;
+                            }
+                            daySelect.appendChild(option);
+                        });
+                        daySelect.onchange = (e) => updateItem(index, 'day', e.target.value);
+                        itemDiv.appendChild(dayLabel);
+                        itemDiv.appendChild(daySelect);
+
+                        const storageLabel = document.createElement('label');
+                        storageLabel.innerText = 'Storage:';
+                        const storageSelect = document.createElement('select');
+                        ["Frozen", "Refrigerated"].forEach(storage => {
+                            const option = document.createElement('option');
+                            option.value = storage;
+                            option.innerText = storage;
+                            if (storage === item.storage) {
+                                option.selected = true;
+                            }
+                            storageSelect.appendChild(option);
+                        });
+                        storageSelect.onchange = (e) => updateItem(index, 'storage', e.target.value);
+                        itemDiv.appendChild(storageLabel);
+                        itemDiv.appendChild(storageSelect);
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.innerText = 'Delete';
+                        deleteButton.onclick = () => deleteItem(index);
+                        itemDiv.appendChild(deleteButton);
+
+                        daySection.appendChild(itemDiv);
+                    }
+                });
+
+                const addButton = document.createElement('button');
+                addButton.innerText = 'Add Item';
+                addButton.onclick = () => addItem(day);
+
+                daySection.appendChild(addButton);
+                container.appendChild(daySection);
+
+                currentIndex = (currentIndex + 1) % daysOfWeek.length;
+            }
+
+            saveList();
+            calculateTotal();
+        }
+
+        function resetList() {
+            if (confirm('Are you sure you want to reset the list?')) {
+                localStorage.removeItem('shoppingList');
+                localStorage.removeItem('startingDay');
+                shoppingList.length = 0;
+                startingDay = 'Sunday';
+                renderList();
+            }
+        }
+
+        document.getElementById('starting-day').value = startingDay;
+        window.onload = renderList;
+    </script>
+</body>
+</html>
