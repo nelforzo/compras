@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,16 +10,20 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
+
         .day-section {
             margin-bottom: 20px;
         }
+
         .item {
             margin-bottom: 10px;
         }
+
         .item label {
             display: block;
             margin-bottom: 5px;
         }
+
         .item input,
         .item select,
         .item button {
@@ -27,16 +32,19 @@
             margin-bottom: 5px;
             box-sizing: border-box;
         }
+
         #total {
             text-align: right;
             margin-top: 20px;
         }
+
         button {
             padding: 10px;
             margin-left: 10px;
         }
     </style>
 </head>
+
 <body>
     <h1>Shopping List</h1>
     <label for="starting-day">Starting Day:</label>
@@ -53,6 +61,7 @@
     <div id="total">
         <span>Total: ¥<span id="total-price">0</span></span>
         <button onclick="resetList()">Reset</button>
+        <button onclick="exportToCSV()">Export</button>
     </div>
 
     <script>
@@ -198,8 +207,33 @@
             }
         }
 
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Day,Name,Price,Storage\n";
+
+            let currentIndex = daysOfWeek.indexOf(startingDay);
+            for (let i = 0; i < daysOfWeek.length; i++) {
+                const day = daysOfWeek[currentIndex];
+                shoppingList.forEach(item => {
+                    if (item.day === day) {
+                        csvContent += `${item.day},${item.name},${item.price},${item.storage}\n`;
+                    }
+                });
+                currentIndex = (currentIndex + 1) % daysOfWeek.length;
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "shopping_list.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         document.getElementById('starting-day').value = startingDay;
         window.onload = renderList;
     </script>
 </body>
+
 </html>
