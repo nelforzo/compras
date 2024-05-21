@@ -9,6 +9,8 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #121212;
+            color: #d3d3d3;
         }
 
         .day-section {
@@ -27,9 +29,13 @@
         .item input,
         .item select,
         .item button {
+            width: 100%;
             padding: 8px;
             margin-bottom: 5px;
             box-sizing: border-box;
+            background-color: #2c2c2c;
+            color: #d3d3d3;
+            border: 1px solid #444;
         }
 
         #total {
@@ -39,7 +45,25 @@
 
         button {
             padding: 10px;
-            margin-left: 10px;
+            background-color: #444;
+            color: #d3d3d3;
+            border: none;
+            margin-bottom: 4px;
+        }
+
+        select {
+            background-color: #2c2c2c;
+            color: #d3d3d3;
+            border: 1px solid #444;
+        }
+
+        h1,
+        h2 {
+            color: #d3d3d3;
+        }
+
+        label {
+            color: #d3d3d3;
         }
     </style>
 </head>
@@ -123,7 +147,7 @@
                         itemDiv.className = 'item';
 
                         const nameLabel = document.createElement('label');
-                        nameLabel.innerText = 'Item Name:';
+                        nameLabel.innerText = 'Name:';
                         const nameInput = document.createElement('input');
                         nameInput.type = 'text';
                         nameInput.value = item.name;
