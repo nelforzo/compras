@@ -21,6 +21,23 @@
             margin-bottom: 10px;
         }
 
+        .item-name,
+        .item-price,
+        .item-day,
+        .item-storage {
+            margin-right: 4px;
+        }
+
+        .item-name,
+        .item-price {
+            font-weight: bold;
+        }
+
+        .item-day,
+        .item-storage {
+            font-size: small;
+        }
+
         .item label {
             display: block;
             margin-bottom: 5px;
@@ -38,17 +55,26 @@
             border: 1px solid #444;
         }
 
+        .item button {
+            background-color: #444;
+            color: #d3d3d3;
+        }
+
         #total {
             text-align: right;
             margin-top: 20px;
+            position: sticky;
+            bottom: 0;
+            background-color: #121212;
+            padding: 10px 0;
         }
 
         button {
             padding: 10px;
+            margin-left: 10px;
             background-color: #444;
             color: #d3d3d3;
             border: none;
-            margin-bottom: 4px;
         }
 
         select {
@@ -64,6 +90,16 @@
 
         label {
             color: #d3d3d3;
+        }
+
+        .inline {
+            display: flex;
+            align-items: center;
+        }
+
+        .inline button {
+            margin-left: 5px;
+            padding: 5px 10px;
         }
     </style>
 </head>
@@ -103,7 +139,7 @@
         }
 
         function addItem(day) {
-            shoppingList.push({ name: '', price: 0, day: day, storage: 'Frozen' });
+            shoppingList.push({ name: '', price: 0, day: day, storage: 'Frozen', editMode: true });
             renderList();
         }
 
@@ -128,6 +164,16 @@
             renderList();
         }
 
+        function saveItem(index) {
+            shoppingList[index].editMode = false;
+            renderList();
+        }
+
+        function editItem(index) {
+            shoppingList[index].editMode = true;
+            renderList();
+        }
+
         function renderList() {
             const container = document.getElementById('shopping-list-container');
             container.innerHTML = '';
@@ -146,61 +192,81 @@
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'item';
 
-                        const nameLabel = document.createElement('label');
-                        nameLabel.innerText = 'Name:';
-                        const nameInput = document.createElement('input');
-                        nameInput.type = 'text';
-                        nameInput.value = item.name;
-                        nameInput.oninput = (e) => updateItem(index, 'name', e.target.value);
-                        itemDiv.appendChild(nameLabel);
-                        itemDiv.appendChild(nameInput);
+                        if (item.editMode) {
+                            const nameLabel = document.createElement('label');
+                            nameLabel.innerText = 'Name:';
+                            const nameInput = document.createElement('input');
+                            nameInput.type = 'text';
+                            nameInput.value = item.name;
+                            nameInput.oninput = (e) => updateItem(index, 'name', e.target.value);
+                            itemDiv.appendChild(nameLabel);
+                            itemDiv.appendChild(nameInput);
 
-                        const priceLabel = document.createElement('label');
-                        priceLabel.innerText = 'Price:';
-                        const priceInput = document.createElement('input');
-                        priceInput.type = 'number';
-                        priceInput.step = '0.01';
-                        priceInput.value = item.price;
-                        priceInput.oninput = (e) => updateItem(index, 'price', e.target.value);
-                        itemDiv.appendChild(priceLabel);
-                        itemDiv.appendChild(priceInput);
+                            const priceLabel = document.createElement('label');
+                            priceLabel.innerText = 'Price:';
+                            const priceInput = document.createElement('input');
+                            priceInput.type = 'number';
+                            priceInput.step = '0.01';
+                            priceInput.value = item.price;
+                            priceInput.oninput = (e) => updateItem(index, 'price', e.target.value);
+                            itemDiv.appendChild(priceLabel);
+                            itemDiv.appendChild(priceInput);
 
-                        const dayLabel = document.createElement('label');
-                        dayLabel.innerText = 'Day:';
-                        const daySelect = document.createElement('select');
-                        daysOfWeek.forEach(dayOption => {
-                            const option = document.createElement('option');
-                            option.value = dayOption;
-                            option.innerText = dayOption;
-                            if (dayOption === item.day) {
-                                option.selected = true;
-                            }
-                            daySelect.appendChild(option);
-                        });
-                        daySelect.onchange = (e) => updateItem(index, 'day', e.target.value);
-                        itemDiv.appendChild(dayLabel);
-                        itemDiv.appendChild(daySelect);
+                            const dayLabel = document.createElement('label');
+                            dayLabel.innerText = 'Day:';
+                            const daySelect = document.createElement('select');
+                            daysOfWeek.forEach(dayOption => {
+                                const option = document.createElement('option');
+                                option.value = dayOption;
+                                option.innerText = dayOption;
+                                if (dayOption === item.day) {
+                                    option.selected = true;
+                                }
+                                daySelect.appendChild(option);
+                            });
+                            daySelect.onchange = (e) => updateItem(index, 'day', e.target.value);
+                            itemDiv.appendChild(dayLabel);
+                            itemDiv.appendChild(daySelect);
 
-                        const storageLabel = document.createElement('label');
-                        storageLabel.innerText = 'Storage:';
-                        const storageSelect = document.createElement('select');
-                        ["Frozen", "Refrigerated"].forEach(storage => {
-                            const option = document.createElement('option');
-                            option.value = storage;
-                            option.innerText = storage;
-                            if (storage === item.storage) {
-                                option.selected = true;
-                            }
-                            storageSelect.appendChild(option);
-                        });
-                        storageSelect.onchange = (e) => updateItem(index, 'storage', e.target.value);
-                        itemDiv.appendChild(storageLabel);
-                        itemDiv.appendChild(storageSelect);
+                            const storageLabel = document.createElement('label');
+                            storageLabel.innerText = 'Storage:';
+                            const storageSelect = document.createElement('select');
+                            ["Frozen", "Refrigerated"].forEach(storage => {
+                                const option = document.createElement('option');
+                                option.value = storage;
+                                option.innerText = storage;
+                                if (storage === item.storage) {
+                                    option.selected = true;
+                                }
+                                storageSelect.appendChild(option);
+                            });
+                            storageSelect.onchange = (e) => updateItem(index, 'storage', e.target.value);
+                            itemDiv.appendChild(storageLabel);
+                            itemDiv.appendChild(storageSelect);
 
-                        const deleteButton = document.createElement('button');
-                        deleteButton.innerText = 'Delete';
-                        deleteButton.onclick = () => deleteItem(index);
-                        itemDiv.appendChild(deleteButton);
+                            const saveButton = document.createElement('button');
+                            saveButton.innerText = 'Save';
+                            saveButton.onclick = () => saveItem(index);
+                            itemDiv.appendChild(saveButton);
+                        } else {
+                            const itemContent = document.createElement('div');
+                            itemContent.className = 'inline';
+                            itemContent.innerHTML = `
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-price">¥${item.price}</div>
+                                <div class="item-day">${item.day}</div>
+                                <div class="item-storage">${item.storage}</div>
+                            `;
+                            const editButton = document.createElement('button');
+                            editButton.innerText = 'Edit';
+                            editButton.onclick = () => editItem(index);
+                            const deleteButton = document.createElement('button');
+                            deleteButton.innerText = 'Delete';
+                            deleteButton.onclick = () => deleteItem(index);
+                            itemContent.appendChild(editButton);
+                            itemContent.appendChild(deleteButton);
+                            itemDiv.appendChild(itemContent);
+                        }
 
                         daySection.appendChild(itemDiv);
                     }
