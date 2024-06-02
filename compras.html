@@ -92,12 +92,16 @@
             color: #d3d3d3;
         }
 
-        .inline {
-            display: flex;
+        .item-content {
             align-items: center;
         }
 
-        .inline button {
+        .item-content-buttons {
+            width: 50%;
+            display: flex;
+        }
+
+        .item-content-buttons button {
             margin-left: 5px;
             padding: 5px 10px;
         }
@@ -250,21 +254,24 @@
                             itemDiv.appendChild(saveButton);
                         } else {
                             const itemContent = document.createElement('div');
-                            itemContent.className = 'inline';
+                            itemContent.className = 'item-content';
                             itemContent.innerHTML = `
-                                <div class="item-name">${item.name}</div>
-                                <div class="item-price">¥${item.price}</div>
-                                <div class="item-day">${item.day}</div>
-                                <div class="item-storage">${item.storage}</div>
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-price">¥${item.price}</span><br>
+                                <span class="item-day">${item.day}</span>
+                                <span class="item-storage">(${item.storage})</span><br>
                             `;
+                            const itemContentButtons = document.createElement('div');
+                            itemContentButtons.className = 'item-content-buttons';
                             const editButton = document.createElement('button');
                             editButton.innerText = 'Edit';
                             editButton.onclick = () => editItem(index);
                             const deleteButton = document.createElement('button');
                             deleteButton.innerText = 'Delete';
                             deleteButton.onclick = () => deleteItem(index);
-                            itemContent.appendChild(editButton);
-                            itemContent.appendChild(deleteButton);
+                            itemContentButtons.appendChild(editButton);
+                            itemContentButtons.appendChild(deleteButton);
+                            itemContent.appendChild(itemContentButtons);
                             itemDiv.appendChild(itemContent);
                         }
 
