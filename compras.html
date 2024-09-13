@@ -105,6 +105,30 @@
             margin-left: 5px;
             padding: 5px 10px;
         }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .quantity-controls button {
+            width: 30px;
+            height: 30px;
+            background-color: #444;
+            color: #d3d3d3;
+            border: none;
+            font-size: 18px;
+            line-height: 0;
+            padding: 0;
+            margin: 0 5px;
+            text-align: center;
+        }
+
+        .quantity-controls span {
+            width: 30px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -122,6 +146,10 @@
     </select>
     <div id="shopping-list-container"></div>
     <div id="total">
+        <label>
+            <input type="checkbox" id="include-tax" onchange="calculateTotal()" checked>
+            Prices include tax
+        </label>
         <span>Total: ¥<span id="total-price">0</span></span>
         <button onclick="resetList()">Reset</button>
         <button onclick="exportToCSV()">Export</button>
@@ -138,12 +166,23 @@
         }
 
         function calculateTotal() {
-            const total = shoppingList.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-            document.getElementById('total-price').innerText = total.toFixed(2);
+            const includeTax = document.getElementById('include-tax').checked;
+            const total = shoppingList.reduce((sum, item) => {
+                const price = (parseFloat(item.price) || 0) * (item.quantity || 1);
+                return sum + price;
+            }, 0);
+
+            const totalPriceElement = document.getElementById('total-price');
+            if (includeTax) {
+                totalPriceElement.innerText = total.toFixed(2);
+            } else {
+                const totalWithTax = total * 1.10;
+                totalPriceElement.innerText = totalWithTax.toFixed(2) + " (incl. 10% tax)";
+            }
         }
 
         function addItem(day) {
-            shoppingList.push({ name: '', price: 0, day: day, storage: 'Frozen', editMode: true });
+            shoppingList.push({ name: '', price: 0, day: day, storage: 'none', quantity: 1, editMode: true });
             renderList();
         }
 
@@ -159,6 +198,17 @@
             } else {
                 saveList();
                 calculateTotal();
+            }
+        }
+
+        function changeQuantity(index, delta) {
+            shoppingList[index].quantity += delta;
+            if (shoppingList[index].quantity < 1) {
+                deleteItem(index);
+            } else {
+                saveList();
+                calculateTotal();
+                renderList();
             }
         }
 
@@ -235,7 +285,7 @@
                             const storageLabel = document.createElement('label');
                             storageLabel.innerText = 'Storage:';
                             const storageSelect = document.createElement('select');
-                            ["Frozen", "Refrigerated"].forEach(storage => {
+                            ["none", "Frozen", "Refrigerated"].forEach(storage => {
                                 const option = document.createElement('option');
                                 option.value = storage;
                                 option.innerText = storage;
@@ -261,6 +311,22 @@
                                 <span class="item-day">${item.day}</span>
                                 <span class="item-storage">(${item.storage})</span><br>
                             `;
+
+                            const quantityControls = document.createElement('div');
+                            quantityControls.className = 'quantity-controls';
+                            const minusButton = document.createElement('button');
+                            minusButton.innerText = '-';
+                            minusButton.onclick = () => changeQuantity(index, -1);
+                            const quantitySpan = document.createElement('span');
+                            quantitySpan.innerText = item.quantity;
+                            const plusButton = document.createElement('button');
+                            plusButton.innerText = '+';
+                            plusButton.onclick = () => changeQuantity(index, 1);
+                            quantityControls.appendChild(minusButton);
+                            quantityControls.appendChild(quantitySpan);
+                            quantityControls.appendChild(plusButton);
+                            itemContent.appendChild(quantityControls);
+
                             const itemContentButtons = document.createElement('div');
                             itemContentButtons.className = 'item-content-buttons';
                             const editButton = document.createElement('button');
@@ -305,14 +371,14 @@
 
         function exportToCSV() {
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Day,Name,Price,Storage\n";
+            csvContent += "Day,Name,Price,Quantity,Storage\n";
 
             let currentIndex = daysOfWeek.indexOf(startingDay);
             for (let i = 0; i < daysOfWeek.length; i++) {
                 const day = daysOfWeek[currentIndex];
                 shoppingList.forEach(item => {
                     if (item.day === day) {
-                        csvContent += `${item.day},${item.name},${item.price},${item.storage}\n`;
+                        csvContent += `${item.day},${item.name},${item.price},${item.quantity},${item.storage}\n`;
                     }
                 });
                 currentIndex = (currentIndex + 1) % daysOfWeek.length;
